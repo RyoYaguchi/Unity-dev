@@ -1,0 +1,30 @@
+/[Ll]ibrary/
+/[Tt]emp/
+/[Oo]bj/
+/[Bb]uild/
+/[Bb]uilds/
+/[Ll]ogs/
+/[Uu]serSettings/
+/[MemoryCaptures]/
+/[Aa]ssetPlayground/
+
+# Generated VS/MonoDevelop/NetBeans project files
+ExportedObj/
+.consulo/
+*.csproj
+*.unityproj
+*.sln
+*.suo
+*.tmp
+*.user
+*.userprefs
+*.pidb
+*.booproj
+*.svd
+*.class
+*.targets
+
+# OS generated files
+.DS_Store
+Thumbs.db
+Desktop.ini
