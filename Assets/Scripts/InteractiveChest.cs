@@ -5,6 +5,7 @@ public class InteractiveChest : MonoBehaviour
 {
     public Sprite[] chestSprites; // Array of 3 sprites: [0] Closed, [1] Half Open, [2] Open
     public Renderer promptRenderer; // Renderer for the popup E indicator
+    public string itemName = "どうのつるぎ"; // 入手アイテム名（ItemDatabase）
 
     private SpriteRenderer sr;
     private bool inRange = false;
@@ -13,9 +14,13 @@ public class InteractiveChest : MonoBehaviour
     void Start()
     {
         sr = GetComponent<SpriteRenderer>();
+        // 既に開封済みの宝箱は再入場でも開封状態のまま（アイテム再取得不可）。
+        var gm0 = GameManager.Instance;
+        bool already = gm0 != null && gm0.IsChestOpened(gameObject.name);
+        if (already) isOpen = true;
         if (chestSprites != null && chestSprites.Length > 0 && sr != null)
         {
-            sr.sprite = chestSprites[0]; // Set closed initially
+            sr.sprite = (already && chestSprites.Length > 2) ? chestSprites[2] : chestSprites[0];
         }
         if (promptRenderer != null)
         {
@@ -65,23 +70,40 @@ public class InteractiveChest : MonoBehaviour
         isOpen = true;
         inRange = false;
         if (promptRenderer != null) promptRenderer.gameObject.SetActive(false);
+        if (sr == null) sr = GetComponent<SpriteRenderer>();   // Start未実行でも安全に
 
         // Frame 1: Opening (Half Open)
-        if (chestSprites != null && chestSprites.Length > 1)
+        if (sr != null && chestSprites != null && chestSprites.Length > 1)
         {
             sr.sprite = chestSprites[1];
             yield return new WaitForSeconds(0.12f);
         }
 
+        if (this == null) yield break;   // 待機中にシーン遷移等で破棄されたら中断
+
         // Frame 2: Open
-        if (chestSprites != null && chestSprites.Length > 2)
+        if (sr != null && chestSprites != null && chestSprites.Length > 2)
         {
             sr.sprite = chestSprites[2];
         }
 
-        // Spawn beautiful retro text that floats up and fades
-        SpawnFloatingText("Obtained: Hero's Sword!");
+        // 実アイテムをインベントリへ付与
+        var gm = GameManager.Instance;
+        Item got = ItemDatabase.Create(itemName);
+        if (gm != null && got != null)
+        {
+            gm.AddItem(got);
+            gm.MarkChestOpened(gameObject.name);   // 開封を永続記録（再入場で再取得防止）
+            SpawnFloatingText(got.Label() + " を てにいれた！");
+        }
+        else
+        {
+            SpawnFloatingText(itemName + " を てにいれた！");
+        }
     }
+
+    // テスト/外部から開封させる用。
+    public void Open() { if (!isOpen) StartCoroutine(OpenChestRoutine()); }
 
     void SpawnFloatingText(string text)
     {
